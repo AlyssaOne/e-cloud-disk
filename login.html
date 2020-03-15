@@ -347,7 +347,7 @@
 				var name = document.getElementById("login_user").value;
 				var pwd = document.getElementById("login_pwd").value;
 				var data = {
-					"name": name,
+					"username": name,
 					"pwd": pwd,
 				}
 				console.log(data);
@@ -356,11 +356,13 @@
 					data: JSON.stringify(data),
 					//type、contentType必填,指明传参方式
 					type: "POST",
-					url: "/ecloud/files",
+					url: "/auth/login",
 					contentType: "application/json;charset=utf-8",
 					success: function (response) {
 						//前端调用成功后，可以处理后端传回的json格式数据。
+						response = JSON.parse(response);
 						if (response.success) {
+							document.cookie=response.token;
 							window.location.href = '/index';
 						}
 						else {

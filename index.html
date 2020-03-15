@@ -584,7 +584,7 @@
 					<div class="page-header">
 						<div class="clearfix">
 							<div class="pull-left">
-								<button class="btn btn-white btn-info btn-bold">
+								<button id="btn_upload" class="btn btn-white btn-info btn-bold">
 									<i class="ace-icon fa fa-cloud-upload bigger-120 blue"></i>
 									上传
 								</button>
@@ -732,8 +732,8 @@
 									</tr>
 								</thead>
 
-								<tbody>
-									<tr role="row" class="odd">
+								<tbody id="tbody_list">
+									<!-- <tr role="row" class="odd">
 										<td style="display: table-cell; vertical-align: middle;" class="center">
 											<label class="pos-rel">
 												<input type="checkbox" class="ace">
@@ -904,7 +904,7 @@
 												</div>
 											</div>
 										</td>
-									</tr>
+									</tr> -->
 								</tbody>
 							</table>
 							<!-- PAGE CONTENT ENDS -->
@@ -1016,6 +1016,182 @@
 				$('.btn-group').removeClass('hide');
 			});
 		})
+
+		jQuery(function ($) {
+			$('#btn_upload').click(function () {
+				// var name = document.getElementById("login_user").value;
+				// var pwd = document.getElementById("login_pwd").value;
+				var data = {
+					"test": "test",
+				}
+				var token = document.cookie.split(";")[0];
+				console.log(token);
+				var head = {
+					"Authorization": "Bearer " + token
+				}
+
+				$.ajax({
+					headers: head,
+					data: JSON.stringify(data),
+					//type、contentType必填,指明传参方式
+					type: "GET",
+					url: "/ecloud/files",
+					contentType: "application/json;charset=utf-8",
+					success: function (response) {
+						//前端调用成功后，可以处理后端传回的json格式数据。
+						// response = JSON.parse(response);
+						if (response.success) {
+							alert("测试成功!");
+						}
+						else {
+							alert('登陆失败！');
+						}
+					}
+				});
+			});
+		})
+		$(document).ready(function () {
+			var token = document.cookie.split(";")[0];
+			console.log(token);
+			var head = {
+				"Authorization": "Bearer " + token
+			}
+			var data = {
+				"token": token,
+			}
+			$.ajax({
+				headers: head,
+				data: JSON.stringify(data),
+				//type、contentType必填,指明传参方式
+				type: "POST",
+				url: "/ecloud/files_onload",
+				contentType: "application/json;charset=utf-8",
+				success: function (response) {
+					//前端调用成功后，可以处理后端传回的json格式数据。
+					// response = JSON.parse(response);
+					if (response.success) {
+						console.log(response.folders);
+						console.log(response.files);
+						// var resList = response.res_list;
+						// var name = response.name;
+						// user_info.innerHTML = response.name + '-' + user_info.innerHTML;
+						var folders = response.folders;
+						var files = response.files;
+						for (var i = 0; i < folders.length; i++) { //遍历一下json数据
+							var tableList = "";
+							$.addTableAllFiles(tableList, folders[i], 0);
+						}
+						for (var i = 0; i < files.length; i++) { //遍历一下json数据
+							var tableList = "";
+							$.addTableAllFiles(tableList, files[i], 1);
+						}
+					}
+					else {
+						alert('登陆失败！');
+					}
+				}
+			});
+		})
+		$.addTableAllFiles = function(tableList, file, type) {
+			var img;
+			var name;
+			var size;
+			var updateTime;
+			//文件夹类型
+			if (type == 0) {
+				name = file.folder_name;
+				size = "-";
+				updateTime = file.folder_recent_update;
+				img = "img/ftype/folder.png";
+			}
+			else {//文件类型
+				name = file.file_name;
+				size = file.file_size;
+				updateTime = file.file_recent_update;
+			
+				var strs = name.split(".");
+				// img = "img/ftype/"+strs[1]+".png";
+				img = "img/"+strs[1]+".png";
+			}
+			tableList += '<tr role="row" class="odd">';
+			tableList += '<td style="display: table-cell; vertical-align: middle;" class="center">';
+			tableList += '<label class="pos-rel">';
+			tableList += '<input type="checkbox" class="ace">';
+			tableList += '<span class="lbl"></span>';
+			tableList += '</label>';
+			tableList += '</td>';
+			tableList += '<td>';
+			tableList += '<label class="pos-rel">';
+			tableList += '<img class="media-object" data-src="holder.js/40x40" alt="40x40" src="'+img+'" data-holder-rendered="true" style="width: 40px; height: 40px;">'
+			tableList += '</label>&nbsp;' + name;
+			tableList += '</td>';
+			tableList += '<td style="display: table-cell; vertical-align: middle;" class="hidden-480">' + size;
+			tableList += '</td>'
+			tableList += '<td style="display: table-cell; vertical-align: middle;">' + updateTime + '</td>';
+			tableList += '<td style="display: table-cell; vertical-align: middle;">'
+			tableList += '<div class="hidden-sm hidden-xs action-buttons">'
+			tableList += '<a class="grey" href="#">'
+			tableList += '<i class="ace-icon fa fa-link bigger-130">' + '</i>'
+			tableList += '</a>'
+			tableList += '<a class="blue" href="#">'
+			tableList += '<i class="ace-icon fa fa-download bigger-130"></i>'
+			tableList += '</a>'
+
+			tableList += '<a class="green" href="#">'
+			tableList += '<i class="ace-icon fa fa-pencil bigger-130"></i>'
+			tableList += '</a>'
+
+			tableList += '<a class="red" href="#">'
+			tableList += '<i class="ace-icon fa fa-trash-o bigger-130"></i>'
+			tableList += '</a>'
+			tableList += '</div>'
+
+			tableList += '<div class="hidden-md hidden-lg">'
+			tableList += '<div class="inline pos-rel">'
+			tableList += '<button class="btn btn-minier btn-yellow dropdown-toggle" data-toggle="dropdown" data-position="auto">'
+			tableList += '<i class="ace-icon fa fa-caret-down icon-only bigger-120"></i>'
+			tableList += '</button>'
+
+			tableList += '<ul class="dropdown-menu dropdown-only-icon dropdown-yellow dropdown-menu-right dropdown-caret dropdown-close">'
+			tableList += '<li>'
+			tableList += '<a href="#" class="tooltip-info" data-rel="tooltip" title="" data-original-title="View">'
+			tableList += '<span class="grey">'
+			tableList += '<i class="ace-icon fa fa-link bigger-120"></i>'
+			tableList += '</span>'
+			tableList += '</a>'
+			tableList += '</li>'
+
+			tableList += '<li>'
+			tableList += '<a href="#" class="tooltip-info" data-rel="tooltip" title="" data-original-title="View">'
+			tableList += '<span class="blue">'
+			tableList += '<i class="ace-icon fa fa-download bigger-120"></i>';
+			tableList += '</span>'
+			tableList += '</a>'
+			tableList += '</li>'
+
+			tableList += '<li>'
+			tableList += '<a href="#" class="tooltip-success" data-rel="tooltip" title="" data-original-title="Edit">'
+			tableList += '<span class="green">'
+			tableList += '<i class="ace-icon fa fa-pencil-square-o bigger-120"></i>'
+			tableList += '</span>'
+			tableList += '</a>'
+			tableList += '</li>'
+
+			tableList += '<li>'
+			tableList += '<a href="#" class="tooltip-error" data-rel="tooltip" title="" data-original-title="Delete">'
+			tableList += '<span class="red">'
+			tableList += '<i class="ace-icon fa fa-trash-o bigger-120"></i>';
+			tableList += '</span>'
+			tableList += '</a>'
+			tableList += '</li>'
+			tableList += '</ul>'
+			tableList += '</div>'
+			tableList += '</div>'
+			tableList += '</td>'
+			tableList += '</tr>'
+
+			$('#tbody_list').append(tableList);
+		}
 	</script>
 
 </body>
