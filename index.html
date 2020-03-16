@@ -486,11 +486,11 @@
 		<div class="main-content">
 			<div class="main-content-inner">
 				<div class="breadcrumbs ace-save-state" id="breadcrumbs">
-					<ul class="breadcrumb">
-						<li>
+					<ul id="nav_path" class="breadcrumb">
+						<!-- <li>
 							<i class="ace-icon fa fa-home home-icon"></i>
 							<a href="#">我的网盘</a>
-						</li>
+						</li> -->
 						<!-- <li class="active">Gallery</li> -->
 					</ul><!-- /.breadcrumb -->
 
@@ -1049,7 +1049,54 @@
 					}
 				});
 			});
+
+			// $(document).on("click", '.folder_id td', function () {
+			// 	console.log("bind success!");
+			// 	// $(this).click(function () {
+			// 	var token = document.cookie.split(";")[0];
+			// 	console.log(token);
+			// 	var head = {
+			// 		"Authorization": "Bearer " + token
+			// 	}
+			// 	var data = {
+			// 		"token": token,
+			// 	}
+			// 	$.ajax({
+			// 		headers: head,
+			// 		data: JSON.stringify(data),
+			// 		//type、contentType必填,指明传参方式
+			// 		type: "GET",
+			// 		url: "/ecloud/files",
+			// 		contentType: "application/json;charset=utf-8",
+			// 		success: function (response) {
+			// 			if (response.success) {
+			// 				console.log(response.folders);
+			// 				console.log(response.files);
+			// 				// var resList = response.res_list;
+			// 				// var name = response.name;
+			// 				// user_info.innerHTML = response.name + '-' + user_info.innerHTML;
+			// 				var folders = response.folders;
+			// 				var files = response.files;
+			// 				for (var i = 0; i < folders.length; i++) { //遍历一下json数据
+			// 					$('#tbody_list').empty();
+			// 					var tableList = "";
+			// 					$.addTableAllFiles(tableList, folders[i], 0);
+			// 				}
+			// 				for (var i = 0; i < files.length; i++) { //遍历一下json数据
+			// 					$('#tbody_list').empty();
+			// 					var tableList = "";
+			// 					$.addTableAllFiles(tableList, files[i], 1);
+			// 				}
+			// 			}
+			// 			else {
+			// 				alert('获取文件列表失败！');
+			// 			}
+			// 		}
+			// 	});
+			// 	// });
+			// })
 		})
+
 		$(document).ready(function () {
 			var token = document.cookie.split(";")[0];
 			console.log(token);
@@ -1075,6 +1122,14 @@
 						// var resList = response.res_list;
 						// var name = response.name;
 						// user_info.innerHTML = response.name + '-' + user_info.innerHTML;
+
+						var parent_id = response.parent_id;
+						var parent_name = response.parent_name;
+
+						var ulStr = '<li><i class="ace-icon fa fa-home home-icon"></i>';
+						ulStr += '<a href="#" id="ulList'+parent_id+'" onclick="backFolder('+parent_id+')">'+'&nbsp&nbsp;我的网盘'+'</a></li>';
+						$('#nav_path').append(ulStr);
+
 						var folders = response.folders;
 						var files = response.files;
 						for (var i = 0; i < folders.length; i++) { //遍历一下json数据
@@ -1087,31 +1142,37 @@
 						}
 					}
 					else {
-						alert('登陆失败！');
+						alert('获取文件列表失败！');
 					}
 				}
 			});
 		})
-		$.addTableAllFiles = function(tableList, file, type) {
+		
+		$.addTableAllFiles = function (tableList, file, type) {
 			var img;
 			var name;
 			var size;
 			var updateTime;
+
+			var dbclick_event;
+
 			//文件夹类型
 			if (type == 0) {
 				name = file.folder_name;
 				size = "-";
 				updateTime = file.folder_recent_update;
 				img = "img/ftype/folder.png";
+				dbclick_event = "enterFolder";
 			}
 			else {//文件类型
 				name = file.file_name;
 				size = file.file_size;
 				updateTime = file.file_recent_update;
-			
+				dbclick_event = "showFile";
+
 				var strs = name.split(".");
 				// img = "img/ftype/"+strs[1]+".png";
-				img = "img/"+strs[1]+".png";
+				img = "img/ftype/" + strs[1] + ".png";
 			}
 			tableList += '<tr role="row" class="odd">';
 			tableList += '<td style="display: table-cell; vertical-align: middle;" class="center">';
@@ -1120,9 +1181,9 @@
 			tableList += '<span class="lbl"></span>';
 			tableList += '</label>';
 			tableList += '</td>';
-			tableList += '<td>';
+			tableList += '<td ondblclick="'+dbclick_event+'(' + file.id + ')">';
 			tableList += '<label class="pos-rel">';
-			tableList += '<img class="media-object" data-src="holder.js/40x40" alt="40x40" src="'+img+'" data-holder-rendered="true" style="width: 40px; height: 40px;">'
+			tableList += '<img class="media-object" data-src="holder.js/40x40" alt="40x40" src="' + img + '" data-holder-rendered="true" style="width: 40px; height: 40px;">'
 			tableList += '</label>&nbsp;' + name;
 			tableList += '</td>';
 			tableList += '<td style="display: table-cell; vertical-align: middle;" class="hidden-480">' + size;
@@ -1192,6 +1253,116 @@
 
 			$('#tbody_list').append(tableList);
 		}
+
+		function enterFolder(id) {
+			console.log("bind success!");
+			// $(this).click(function () {
+			var token = document.cookie.split(";")[0];
+			console.log(token);
+			var head = {
+				"Authorization": "Bearer " + token
+			}
+			var data = {
+				"token": token,
+				"folder_id": id
+			}
+			$.ajax({
+				headers: head,
+				data: JSON.stringify(data),
+				//type、contentType必填,指明传参方式
+				type: "POST",
+				url: "/ecloud/files",
+				contentType: "application/json;charset=utf-8",
+				success: function (response) {
+					if (response.success) {
+						console.log(response.folders);
+						console.log(response.files);
+						// var resList = response.res_list;
+						// var name = response.name;
+						// user_info.innerHTML = response.name + '-' + user_info.innerHTML;
+
+						//路径导航栏
+						var parent_id = response.parent_id;
+						var parent_name = response.parent_name;
+						var ulStr = '<li><a href="#" id="ulList'+parent_id+'" onclick="backFolder('+parent_id+')">'+parent_name+'</a></li>';
+						$('#nav_path').append(ulStr);
+
+						var folders = response.folders;
+						var files = response.files;
+						$('#tbody_list').empty();
+
+						for (var i = 0; i < folders.length; i++) { //遍历一下json数据
+							var tableList = "";
+							$.addTableAllFiles(tableList, folders[i], 0);
+						}
+						for (var i = 0; i < files.length; i++) { //遍历一下json数据
+							var tableList = "";
+							$.addTableAllFiles(tableList, files[i], 1);
+						}
+					}
+					else {
+						alert('获取文件列表失败！');
+					}
+				}
+			});
+		}
+		
+		function showFile(id) {
+			console.log("Show File!");
+		}
+
+		function backFolder(id){
+			console.log("bind success!");
+			// $(this).click(function () {
+			var token = document.cookie.split(";")[0];
+			console.log(token);
+			var head = {
+				"Authorization": "Bearer " + token
+			}
+			var data = {
+				"token": token,
+				"folder_id": id
+			}
+			$.ajax({
+				headers: head,
+				data: JSON.stringify(data),
+				//type、contentType必填,指明传参方式
+				type: "POST",
+				url: "/ecloud/files",
+				contentType: "application/json;charset=utf-8",
+				success: function (response) {
+					if (response.success) {
+						console.log(response.folders);
+						console.log(response.files);
+						// var resList = response.res_list;
+						// var name = response.name;
+						// user_info.innerHTML = response.name + '-' + user_info.innerHTML;
+
+						//路径导航栏
+						var parent_id = response.parent_id;
+						var parent_name = response.parent_name;
+						$('#ulList'+parent_id).parent().nextAll().remove();
+
+						var folders = response.folders;
+						var files = response.files;
+						$('#tbody_list').empty();
+
+						for (var i = 0; i < folders.length; i++) { //遍历一下json数据
+							var tableList = "";
+							$.addTableAllFiles(tableList, folders[i], 0);
+						}
+						for (var i = 0; i < files.length; i++) { //遍历一下json数据
+							var tableList = "";
+							$.addTableAllFiles(tableList, files[i], 1);
+						}
+					}
+					else {
+						alert('获取文件列表失败！');
+					}
+				}
+			});
+		}
+	
 	</script>
 
 </body>
